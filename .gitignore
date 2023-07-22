@@ -1,0 +1,7 @@
+
+.DS_Store
+.idea/misc.xml
+.idea/MNIST_classification.iml
+forecasts/MNIST_forecasts/submission_logistic_regression.csv
+models/__pycache__/LogisticRegression.cpython-310.pyc
+.idea/misc.xml
