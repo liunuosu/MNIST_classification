@@ -31,7 +31,7 @@ model = tf.keras.Sequential([
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 # Step 4: Fit the model on the training data
-history = model.fit(X_train, Y_train, epochs=20, batch_size=32, validation_data=(X_val, Y_val))
+history = model.fit(X_train, Y_train, epochs=10, batch_size=32, validation_data=(X_val, Y_val))
 
 # Optionally, you can check the training and validation accuracy
 train_predictions = model.predict_classes(X_train)

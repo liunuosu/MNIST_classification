@@ -23,9 +23,6 @@ test = pd.read_csv("data/test.csv")
 num_classes = 100
 input_shape = (32, 32, 3)
 
-# (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
-# print(x_train.shape)
-
 # Convert the DataFrame to NumPy arrays with dtype=np.float32
 X = train.drop(labels=["label"], axis=1).values.astype(np.float32)
 Y = train["label"].values.astype(np.int32)
@@ -230,25 +227,7 @@ def run_experiment(model):
 vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
-
-# # Optionally, you can check the training and validation accuracy
-# train_predictions = vit_classifier.predict(X_train).argmax(axis=1)
-# train_accuracy = accuracy_score(Y_train, train_predictions)
-# print("Training accuracy:", train_accuracy)
-
-# val_predictions = vit_classifier.predict(X_val).argmax(axis=1)
-# val_accuracy = accuracy_score(Y_val, val_predictions)
-# print("Validation accuracy:", val_accuracy)
-
-# Step 5: Make predictions on the test data
-# X_test = test.values.astype(np.float32)
-
-# X_test = X_test.reshape(-1, 28, 28, 1)
-# X_test = np.repeat(X_test, 3, axis=-1)
-
 test_predictions = vit_classifier.predict(X_test).argmax(axis=1)
-# X_test = np.array([cv2.resize(image, (28, 28)) for image in X_test])
-# X_test = X_test.reshape(-1,28,28,1)
 
 # Visualize the predictions on X_test
 num_samples_to_visualize = 10
