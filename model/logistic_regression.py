@@ -20,7 +20,7 @@ def get_class(y_prob):
     return tf.argmax(y_prob, axis=1)
 
 
-class LogRegModel():
+class LogRegModel:
     def __init__(self, num_epochs=50, batch_size=1024, random_state=42, pathdir=None):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
@@ -51,7 +51,7 @@ class LogRegModel():
                     classifier_pred, classifier_logits = self.model.forward(batch_features)
 
                     loss_classifier = tf.reduce_mean(
-                        tf.nn.softmax_cross_entropy_with_logits(labels=batch_labels.astype('float32'),
+                        tf.nn.sparse_softmax_cross_entropy_with_logits(labels=batch_labels.astype('float32'),
                                                                 logits=classifier_logits))
                 gradients = tape.gradient(loss_classifier, self.model.trainable_variables)
                 classifier_opt.apply_gradients(zip(gradients, self.model.trainable_variables))
