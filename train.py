@@ -5,7 +5,6 @@ LEARNING_RATE = 0.00025 #mnist 0.0001  # 0.00025    #finetune = 0.000075
 BATCH_SIZE = 16
 EPOCHS = 500
 
-
 def new_model(model_name):
     conv_net = ConvNet(
         input_shape=(2048, 128, 1),
