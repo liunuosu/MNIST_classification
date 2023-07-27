@@ -21,20 +21,23 @@ def get_class(y_prob):
 
 
 class LogRegModel:
-    def __init__(self, num_epochs=50, batch_size=1024, random_state=42, pathdir=None):
+    def __init__(self, num_epochs=50, batch_size=1024, weight_seed=42, pathdir=None):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
-        self.random_state = random_state
+        self.weight_seed= weight_seed
         self.pathdir = pathdir
 
         self.model = None
 
-    def fit(self, x_train, y_train, x_validation, y_validation, random_state=42):
+        self.best_accuracy = 0
+        self.best_epoch = 0
 
-        self.model = MultinomialLogisticRegression(num_features=x_train.shape[-1], num_classes=10, seed=random_state)
+    def fit(self, x_train, y_train, x_validation, y_validation):
+
+        self.model = MultinomialLogisticRegression(num_features=x_train.shape[-1], num_classes=10, seed=self.weight_seed)
 
         checkpoint = tf.train.Checkpoint(model=self.model)
-        manager = tf.train.CheckpointManager(checkpoint, directory=self.pathdir, max_to_keep=20)
+        manager = tf.train.CheckpointManager(checkpoint, directory=self.pathdir, max_to_keep=self.num_epochs)
 
         num_train_samples, n_features = x_train.shape
         classifier_opt = tf.optimizers.Adam()  # Add learning rate?
@@ -51,7 +54,7 @@ class LogRegModel:
                     classifier_pred, classifier_logits = self.model.forward(batch_features)
 
                     loss_classifier = tf.reduce_mean(
-                        tf.nn.sparse_softmax_cross_entropy_with_logits(labels=batch_labels.astype('float32'),
+                        tf.nn.softmax_cross_entropy_with_logits(labels=batch_labels.astype('float32'),
                                                                 logits=classifier_logits))
                 gradients = tape.gradient(loss_classifier, self.model.trainable_variables)
                 classifier_opt.apply_gradients(zip(gradients, self.model.trainable_variables))
@@ -72,13 +75,20 @@ class LogRegModel:
                     print("(Training Classifier) epoch %d; training accuracy: %f; "
                           "validation accuracy: %f; batch classifier loss: %f" % (
                         epoch+1, train_accuracy, validation_accuracy, loss_classifier))
-                    manager.save()
+
+                    if validation_accuracy > self.best_accuracy + 0.0001:
+                        manager.save()
+                        self.best_accuracy = validation_accuracy
+                        self.best_epoch = epoch+1
+
+        checkpoint.restore(manager.latest_checkpoint)
+        print("(Training Classifier) best epoch %d; best validation accuracy %f" % (
+            self.best_epoch, self.best_accuracy))
         return self
 
     def predict(self, x_test):
         y_prob_test, pred_logits_test = self.model.forward(
             x_test.astype('float32'))
         return get_class(y_prob_test)
-
 
 

@@ -1,0 +1,11 @@
+data:
+  validation_size: 0.15
+  random_state: !!int 42
+
+training:
+  num_epochs: !!int 100
+  batch_size: !!int 512
+  weight_seed: !!int 42
+
+model:
+  network: convolutional_NN # convolutional_NN, logistic_regression, FeedForward_NN

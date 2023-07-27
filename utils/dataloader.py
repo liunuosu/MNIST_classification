@@ -3,7 +3,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 
 
-def dataloader(test_size=0.2, random_state=42):
+def dataloader(validation_size=0.2, random_state=42):
     data_train = pd.read_csv("data/train.csv")
     data_test = pd.read_csv("data/test.csv")
 
@@ -21,12 +21,13 @@ def dataloader(test_size=0.2, random_state=42):
     y_train = y_train.toarray()
 
     x_train, x_validation, y_train, y_validation = \
-        train_test_split(x_train, y_train, test_size=test_size, random_state=random_state)
+        train_test_split(x_train, y_train, test_size=validation_size, random_state=random_state)
 
-    print(x_train.shape)
-    print(y_train.shape)
-    print(x_validation.shape)
-    print(y_validation.shape)
+    # TRY STRATIFIED sampling?
+    #print(x_train.shape)
+    #print(y_train.shape)
+    #print(x_validation.shape)
+    #print(y_validation.shape)
     # print(x_test.shape)
     # print(y_train[0:100])
 
