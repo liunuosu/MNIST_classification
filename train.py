@@ -1,16 +1,18 @@
 from convolutional_nn_tut import ConvNet
 import numpy as np
+from utils.dataloader import DataLoader
+import matplotlib.pyplot as plt
 
 LEARNING_RATE = 3e-4 #mnist 0.0001  # 0.00025    #finetune = 0.000075
 BATCH_SIZE = 256
-EPOCHS = 6
+EPOCHS = 4
 
 def new_model(model_name):
     conv_net = ConvNet(
         input_shape=(28, 28, 1),
         conv_filters=(32,   64, 128, 256, ), 
-        conv_kernels=(7,    3,   3,    2, ),
-        conv_strides=(2,    2,   1,    1, ), 
+        conv_kernels=(5,    5,   5,    5, ),
+        conv_strides=(1,    2,   2,    1, ), 
     )
     conv_net._name = model_name
     conv_net.summary()
@@ -42,3 +44,21 @@ if __name__ == "__main__":
     # conv_net = existing_model(model_name)
     conv_net.train_on_batch(batch_size=BATCH_SIZE,num_epoch=EPOCHS)
     
+    # Step 5: Make predictions on the X_test data
+    X_test = DataLoader(BATCH_SIZE,EPOCHS).x_test
+    test_predictions = conv_net.model.predict(X_test)
+    test_labels = np.argmax(test_predictions, axis=1)  # Convert probabilities to class labels
+
+    # Visualize the predictions on X_test
+    num_samples_to_visualize = 10
+    sample_indices = np.random.choice(X_test.shape[0], num_samples_to_visualize, replace=False)
+
+    plt.figure(figsize=(12, 6))
+    for i, index in enumerate(sample_indices):
+        plt.subplot(2, 5, i + 1)
+        plt.imshow(X_test[index].reshape(28, 28), cmap='gray')
+        predicted_label = test_labels[index]
+        plt.title(f"Predicted Label: {predicted_label}")
+        plt.axis('off')
+
+    plt.show()

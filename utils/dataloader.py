@@ -13,9 +13,10 @@ class DataLoader():
         self.len_val_data = len(self.x_val)
         self.batch_nr = 0
         self.nr_batches = int(self.len_train_data/self.batch_size)+0 # +1 to include last batch
+        self.nr_val_batches = int(self.len_val_data/self.batch_size)+0
         print(self.len_train_data)
 
-    def _get_train_val_test_split(self, test_size=0.2, random_state=10):
+    def _get_train_val_test_split(self, test_size=0.2, random_state=5):
         data_train = pd.read_csv("data/train.csv")
         data_test = pd.read_csv("data/test.csv")
 
@@ -29,6 +30,7 @@ class DataLoader():
 
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=test_size, random_state=random_state)
 
+        x_val = x_val/255
         x_train = x_train/255
         x_test = x_test/255   
 
@@ -39,6 +41,12 @@ class DataLoader():
         merge = list(zip(self.x_train,self.y_train)) # make sure we shuffle both x and y evenly
         random.shuffle(merge)
         self.x_train, self.y_train = zip(*merge)
+
+
+        # merge2 = list(zip(self.x_val,self.y_val)) # make sure we shuffle both x and y evenly
+        # random.shuffle(merge2)
+        # self.x_val, self.y_val = zip(*merge2)
+        # asd
         # print(self.x_train[5][100:200]) # sanity check.
     
     # function that returns shuffled batches of train data

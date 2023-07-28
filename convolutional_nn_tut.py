@@ -38,7 +38,7 @@ class ConvNet():
         self._num_conv_layers = len(conv_filters)
 
         self._name = ""
-        self.weight_initializer = None # tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.05, seed=None )
+        self.weight_initializer =  tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=0.05, seed=None )
         self.epoch_count = 1
         self.m_auc = 0
         self.patience = 50
@@ -136,13 +136,11 @@ class ConvNet():
 
             total_correct_train = 0
             total_samples_train = 0
-            
-            val_loss = 0
-            val_loss2 = 0
-            train_accuracy = 0
             accuracy = 0
+            self.dataloader.shuffle_data()
             # asd
             print("\nepoch {}/{}".format(epoch_nr+1,num_epoch))
+            self.counter=0
             for batch_nr in range(self.dataloader.nr_batches):
                 # try:
                     x_train, y_train = self.dataloader.load_data(batch_nr=batch_nr)
@@ -155,56 +153,68 @@ class ConvNet():
 
 
                     if  batch_nr % 6 == 0 :
-                        pass
-                        # x_val, y_val = self.dataloader.load_val(batch_nr=batch_nr)
-                        # # Since y_pred is already a NumPy array, you can directly calculate the loss
-                        # loss_object = SparseCategoricalCrossentropy(from_logits=True)
-                        # val_loss = loss_object(y_val, y_pred).numpy()
-
-                        # self.val_loss_m.append(val_loss)
-                        # meanloss_val = np.mean(self.val_loss_m)
-                        # # print("val loss 2",val_loss)
-                        # val_loss2 = float(str(val_loss))#)[0:15])
-                        # self.val_loss_m.append(val_loss)                      
-                        # meanloss_val = np.mean(self.val_loss_m)
-                        # meanloss_val = float(str(meanloss_val))#[0:15])
-
-
-                    if batch_nr %100 == 0:   
-                        total_train_loss.append(loss)
-                        total_val_loss.append(val_loss)   
-                    
-                    if batch_nr ==self.dataloader.nr_batches-2:
-                        try:
-                            x_val, y_val = self.dataloader.load_val(batch_nr=batch_nr)
-                            y_pred = self.model.predict(x_val,verbose=0)
-                            # Since y_pred is already a NumPy array, you can directly calculate the loss
-                            loss_object = SparseCategoricalCrossentropy(from_logits=True)
-                            val_loss = loss_object(y_val, y_pred).numpy()
-
-                            self.val_loss_m.append(val_loss)
-                            meanloss_val = np.mean(self.val_loss_m)
-                            # print("val loss 2",val_loss)
-                            val_loss2 = float(str(val_loss))#)[0:15])
-                            self.val_loss_m.append(val_loss)                      
-                            meanloss_val = np.mean(self.val_loss_m)
-                            meanloss_val = float(str(meanloss_val))#[0:15])
-                            y_pred_labels = np.argmax(y_pred,axis=1)
-                            correct_predictions = np.sum(y_pred_labels == y_train)
-                            total_correct += correct_predictions
-                            total_samples += len(y_train)
+                        # try:
+                        #     self.counter+=1
+                        #     x_val= self.dataloader.x_val
+                        #     y_val = self.dataloader.y_val
+                        #     y_pred = self.model.predict(x_val,verbose=0)
+                        #     y_pred_labels = np.argmax(y_pred,axis=1)
+                        #     correct_predictions = np.sum(y_pred_labels == y_train)
+                        #     total_correct += correct_predictions
+                        #     total_samples += len(y_train)
                             
-                            accuracy = total_correct / total_samples
+                        #     accuracy = total_correct / total_samples
 
-                            # Compute predictions from the model for train data end of epoch
-                            y_train_pred = self.model.predict(x_train,verbose=0)
-                            y_train_pred_labels = np.argmax(y_train_pred, axis=1)
-                            correct_predictions_train = np.sum(y_train_pred_labels == y_train)
-                            total_correct_train += correct_predictions_train
-                            total_samples_train += len(y_train)
-                            train_accuracy = total_correct_train / total_samples_train
-                        except:
+                        #     # Since y_pred is already a NumPy array, you can directly calculate the loss
+                        #     loss_object = SparseCategoricalCrossentropy(from_logits=True)
+                        #     val_loss = loss_object(y_val, y_pred).numpy()
+
+                        #     self.val_loss_m.append(val_loss)
+                        #     meanloss_val = np.mean(self.val_loss_m)
+                        #     # print("val loss 2",val_loss)
+                        #     val_loss2 = float(str(val_loss))#)[0:15])
+                        #     self.val_loss_m.append(val_loss)                      
+                        #     meanloss_val = np.mean(self.val_loss_m)
+                        #     meanloss_val = float(str(meanloss_val))#[0:15])
+                        # except:
                             pass
+
+
+                    if batch_nr == 1:
+                        # self.counter+=1
+                        x_val= self.dataloader.x_val
+                        y_val = self.dataloader.y_val
+                        y_pred = self.model.predict(x_val,verbose=0)
+                        y_pred_labels = np.argmax(y_pred,axis=1)
+                        correct_predictions = np.sum(y_pred_labels == y_val)
+                        total_correct += correct_predictions
+                        total_samples += len(y_val)
+                        
+                        accuracy = total_correct / total_samples
+
+                        # Since y_pred is already a NumPy array, you can directly calculate the loss
+                        loss_object = SparseCategoricalCrossentropy(from_logits=True)
+                        val_loss = loss_object(y_val, y_pred).numpy()
+
+                        self.val_loss_m.append(val_loss)
+                        meanloss_val = np.mean(self.val_loss_m)
+                        # print("val loss 2",val_loss)
+                        val_loss2 = float(str(val_loss))#)[0:15])
+                        self.val_loss_m.append(val_loss)                      
+                        meanloss_val = np.mean(self.val_loss_m)
+                        meanloss_val = float(str(meanloss_val))#[0:15])   
+                    #     total_train_loss.append(loss)
+                    #     total_val_loss.append(val_loss)   
+                    
+                    # train_accuracy = 0
+                    
+                    # Compute predictions from the model for train data end of epoch
+                    y_train_pred = self.model.predict(x_train[:1000],verbose=0)
+                    y_train_pred_labels = np.argmax(y_train_pred[:1000], axis=1)
+                    correct_predictions_train = np.sum(y_train_pred_labels == y_train[:1000])
+                    total_correct_train += correct_predictions_train
+                    total_samples_train += len(y_train[:1000])
+                    train_accuracy = total_correct_train / total_samples_train
 
                     values=[('train loss',loss2),("mean loss",meanloss),('train_acc',train_accuracy),("val_loss",val_loss2),("mean_val_loss",meanloss_val),('val_acc',accuracy)]  # add comma after last ) to add another metric!        
                     pb_i.add(batch_size, values=values)
@@ -215,7 +225,7 @@ class ConvNet():
             self.dataloader.shuffle_data()
             total_train_loss.append(meanloss)
             total_val_loss.append(meanloss_val)  
-            self.dataloader.shuffle_data()
+            # self.dataloader.shuffle_data()
             # self.dataloader.reset_counter() # makes it work after last epoch    
             skip_n_first_epoch = 2 # prevents model from showing absurd scale of start loss
             vis_len =   (len(total_train_loss)) - skip_n_first_epoch     
@@ -270,7 +280,7 @@ class ResNet:
         x = layers.Dense(1024, kernel_initializer=self.weight_initializer)(x)
         x = layers.Activation("relu")(x)
         x = layers.Dropout(0.5)(x)
-        x = layers.Dense(11)(x)
+        x = layers.Dense(10)(x)
         return x
 
     def _create_model(self):
