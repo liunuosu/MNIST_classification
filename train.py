@@ -11,7 +11,7 @@ def new_model(model_name):
     conv_net = ConvNet(
         input_shape=(28, 28, 1),
         conv_filters=(32,   64, 128, 256, ), 
-        conv_kernels=(5,    5,   5,    5, ),
+        conv_kernels=(7,    5,   5,    5, ),
         conv_strides=(1,    2,   2,    1, ), 
     )
     conv_net._name = model_name
@@ -41,7 +41,7 @@ def existing_model(model_name):
 if __name__ == "__main__":
     model_name = "first_model" # 100 epoch
     conv_net = new_model(model_name)
-    # conv_net = existing_model(model_name)
+    # conv_net = existing_model('first_model-18-0.07248-1.79095')
     conv_net.train_on_batch(batch_size=BATCH_SIZE,num_epoch=EPOCHS)
     
     # Step 5: Make predictions on the X_test data

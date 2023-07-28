@@ -22,10 +22,9 @@ from pathlib import Path
 from keras import Input, Model
 import tensorflow
 import time
-
+import datetime
 
 class ConvNet():
-
     def __init__(self, input_shape,
                     conv_filters: list,
                     conv_kernels: list,                   
@@ -84,7 +83,7 @@ class ConvNet():
     @classmethod
     def load(cls, save_folder="."):
         temp = save_folder
-        save_folder = "saved_models"/Path(save_folder); parameters = None;
+        save_folder = "trained_models"/Path(save_folder); parameters = None;
         for i in range(2):
             try:  
                 parameters_path = os.path.join(save_folder, "parameters.pkl")
@@ -95,7 +94,6 @@ class ConvNet():
         weights_path = os.path.join(save_folder, "weights.h5")
         conv_net.load_weights(weights_path)
         return conv_net
-
 
     def summary(self, save_image=False):
         self.model.summary()
@@ -110,6 +108,12 @@ class ConvNet():
     def train_on_batch(self, batch_size, num_epoch):
         metrics_names = ['train loss','mean loss','train_acc','val_loss','mean_val_loss','val_acc'] 
         self.dataloader = DataLoader(batch_size=batch_size,num_epoch=num_epoch)
+
+        # Create a summary writer for logging
+        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        train_log_dir = 'logs/' + current_time + '/train'
+        train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+
 
         self.loss = []
         meanloss = 0
@@ -128,6 +132,7 @@ class ConvNet():
             print("no file of previous loss yet")
 
         
+        self.counter=0
         for epoch_nr in range(0, num_epoch):
             pb_i = Progbar(self.dataloader.len_train_data, stateful_metrics=metrics_names)
             # print(self.dataloader.len_train_data)
@@ -136,61 +141,32 @@ class ConvNet():
 
             total_correct_train = 0
             total_samples_train = 0
-            accuracy = 0
+            val_accuracy = 0
             self.dataloader.shuffle_data()
             # asd
             print("\nepoch {}/{}".format(epoch_nr+1,num_epoch))
-            self.counter=0
             for batch_nr in range(self.dataloader.nr_batches):
                 # try:
                     x_train, y_train = self.dataloader.load_data(batch_nr=batch_nr)
-                    loss = self.model.train_on_batch(x_train, y_train) 
-                    loss2 = float(str(loss[0]))# [0:15])
-                    self.loss.append(loss[0])  
+                    train_loss = self.model.train_on_batch(x_train, y_train) 
+                    train_loss2 = float(str(train_loss[0]))# [0:15])
+                    self.loss.append(train_loss[0])  
                     
                     meanloss = np.mean(self.loss) 
                     meanloss = float(str(meanloss))#[0:15])
 
-
-                    if  batch_nr % 6 == 0 :
-                        # try:
-                        #     self.counter+=1
-                        #     x_val= self.dataloader.x_val
-                        #     y_val = self.dataloader.y_val
-                        #     y_pred = self.model.predict(x_val,verbose=0)
-                        #     y_pred_labels = np.argmax(y_pred,axis=1)
-                        #     correct_predictions = np.sum(y_pred_labels == y_train)
-                        #     total_correct += correct_predictions
-                        #     total_samples += len(y_train)
-                            
-                        #     accuracy = total_correct / total_samples
-
-                        #     # Since y_pred is already a NumPy array, you can directly calculate the loss
-                        #     loss_object = SparseCategoricalCrossentropy(from_logits=True)
-                        #     val_loss = loss_object(y_val, y_pred).numpy()
-
-                        #     self.val_loss_m.append(val_loss)
-                        #     meanloss_val = np.mean(self.val_loss_m)
-                        #     # print("val loss 2",val_loss)
-                        #     val_loss2 = float(str(val_loss))#)[0:15])
-                        #     self.val_loss_m.append(val_loss)                      
-                        #     meanloss_val = np.mean(self.val_loss_m)
-                        #     meanloss_val = float(str(meanloss_val))#[0:15])
-                        # except:
-                            pass
-
-
-                    if batch_nr == 1:
+                    # calculate validation loss at end of epoch
+                    if batch_nr == self.dataloader.nr_batches-1:
                         # self.counter+=1
                         x_val= self.dataloader.x_val
                         y_val = self.dataloader.y_val
+
                         y_pred = self.model.predict(x_val,verbose=0)
                         y_pred_labels = np.argmax(y_pred,axis=1)
                         correct_predictions = np.sum(y_pred_labels == y_val)
                         total_correct += correct_predictions
                         total_samples += len(y_val)
-                        
-                        accuracy = total_correct / total_samples
+                        val_accuracy = total_correct / total_samples
 
                         # Since y_pred is already a NumPy array, you can directly calculate the loss
                         loss_object = SparseCategoricalCrossentropy(from_logits=True)
@@ -216,34 +192,32 @@ class ConvNet():
                     total_samples_train += len(y_train[:1000])
                     train_accuracy = total_correct_train / total_samples_train
 
-                    values=[('train loss',loss2),("mean loss",meanloss),('train_acc',train_accuracy),("val_loss",val_loss2),("mean_val_loss",meanloss_val),('val_acc',accuracy)]  # add comma after last ) to add another metric!        
+                    values=[('train loss',train_loss2),("mean loss",meanloss),('train_acc',train_accuracy),("val_loss",val_loss2),("mean_val_loss",meanloss_val),('val_acc',val_accuracy)]  # add comma after last ) to add another metric!        
                     pb_i.add(batch_size, values=values)
 
                 # except:
                     # pass
+            # Log metrics to TensorBoard
+            with train_summary_writer.as_default():
+                # tf.summary.scalar('train loss', train_loss2, step=self.counter)
+                tf.summary.scalar('mean_loss_train', meanloss, step=self.counter)
+                tf.summary.scalar('train_acc', train_accuracy, step=self.counter)
+                # tf.summary.scalar('train loss', train_loss, step=self.counter)
+                tf.summary.scalar('mean_loss_val', meanloss_val, step=self.counter)
+                tf.summary.scalar('val_acc', val_accuracy, step=self.counter)
+            self.counter+=1
 
+            
             self.dataloader.shuffle_data()
             total_train_loss.append(meanloss)
             total_val_loss.append(meanloss_val)  
-            # self.dataloader.shuffle_data()
-            # self.dataloader.reset_counter() # makes it work after last epoch    
-            skip_n_first_epoch = 2 # prevents model from showing absurd scale of start loss
-            vis_len =   (len(total_train_loss)) - skip_n_first_epoch     
-            if len(total_train_loss) > skip_n_first_epoch:
-                # visualize_loss(total_train_loss[-vis_len ::],total_val_loss[-vis_len::],save=True,model_name=self.name) # adding first is buggy
-                pass
         
+            # save the model
             if epoch_nr%2 == 0:
                 self.save(f"{self._name}-{epoch_nr}-{round(meanloss,5)}-{round(meanloss_val,5)}")
                 pass
             self.loss = []
             self.val_loss_m = []
-            count_val = 0
-            count_val2 = 0
-            # pb_i.update(num_epoch)
-            # time.sleep(0.5)
-
-
 
 
 class ResNet:
@@ -255,6 +229,13 @@ class ResNet:
         self.weight_initializer = weight_initializer
         self.name = name
         self.model = self._create_model()
+
+    def _data_augmentation(self, x):
+        # Apply data augmentation to the image
+        # x = tf.keras.layers.experimental.preprocessing.RandomFlip(mode='horizontal')(x)
+        x = tf.keras.layers.experimental.preprocessing.RandomContrast(factor=0.1)(x)
+        x = tf.keras.layers.experimental.preprocessing.RandomRotation(factor=0.1)(x)
+        return x
 
     def _create_input(self):
         return Input(shape=self.input_shape, name=self.name)
@@ -285,6 +266,7 @@ class ResNet:
     def _create_model(self):
         inputs = self._create_input()
         x = inputs
+        x = self._data_augmentation(x)
         for i in range(len(self.conv_filters)):
             x = self._conv_block(x, i)
         x = self._dense_layer(x)
