@@ -260,7 +260,6 @@ class ResNet:
         return Input(shape=self.input_shape, name=self.name)
 
     def _conv_block(self, input_layer, i):
-        # Convolutional block
         x = layers.Conv2D(self.conv_filters[i], self.conv_kernels[i], padding="same",
                         kernel_initializer=self.weight_initializer, kernel_regularizer=regularizers.l1(1e-6))(input_layer)
         x = layers.Activation("relu")(x)

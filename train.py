@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 LEARNING_RATE = 3e-4 #mnist 0.0001  # 0.00025    #finetune = 0.000075
 BATCH_SIZE = 256
-EPOCHS = 4
+EPOCHS = 20
 
 def new_model(model_name):
     conv_net = ConvNet(
