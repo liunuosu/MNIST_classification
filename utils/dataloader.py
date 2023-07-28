@@ -12,6 +12,7 @@ class DataLoader():
         self.len_train_data = len(self.x_train)
         self.len_val_data = len(self.x_val)
         self.batch_nr = 0
+        self.nr_batches = int(self.len_train_data/self.batch_size)+0 # +1 to include last batch
         print(self.len_train_data)
 
     def _get_train_val_test_split(self, test_size=0.2, random_state=10):
@@ -21,10 +22,16 @@ class DataLoader():
         x_train = data_train.drop('label', axis=1).values.astype(np.float32)
         y_train = data_train['label'].values.astype(np.float32)
         x_test = data_test.values.astype(np.float32)
+
+        # reshape to be compatible with cnn
+        x_train = x_train.reshape(-1, 28, 28, 1)
+        x_test = x_test.reshape(-1, 28, 28, 1)
+
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=test_size, random_state=random_state)
 
         x_train = x_train/255
-        x_test = x_test/255       
+        x_test = x_test/255   
+
         return x_train, y_train, x_val, y_val, x_test
 
     # we only shuffle train data to have a consistent validation loss per epoch
@@ -43,11 +50,33 @@ class DataLoader():
             try:
                 x_train_b.append(self.x_train[(self.batch_size*batch_nr)+i]) # normally you would have a filelist and you load it from disk here. then you append the data to your x_train/y_train
                 y_train_b.append(self.y_train[(self.batch_size*batch_nr)+i])
+                # print(x_train_b.shape)
+                # print((self.batch_size*batch_nr)+i) # sanity check
+            except IndexError:
+                # last few data points do not fit in batch
+                # try to make some logic work for end of array, this is not working yet.
+                # x_train_b.append(np.full_like( self.x_train[(self.batch_size*batch_nr)],-1))  
+                # y_train_b.append([-1])
+                break
+        x_train_b = np.array(x_train_b)
+        y_train_b = np.array(y_train_b)
+        return x_train_b, y_train_b
+
+    def load_val(self,batch_nr):
+        x_val_b = []
+        y_val_b = []
+        self.batch_nr = batch_nr
+        for i in range(batch_nr,batch_nr+self.batch_size):
+            try:
+                x_val_b.append(self.x_val[(self.batch_size*batch_nr)+i]) # normally you would have a filelist and you load it from disk here. then you append the data to your x_train/y_train
+                y_val_b.append(self.y_val[(self.batch_size*batch_nr)+i])
                 # print((self.batch_size*batch_nr)+i) # sanity check
             except IndexError:
                 # last few data points do not fit in batch
                 break
-        return x_train_b, y_train_b
+        x_val_b = np.array(x_val_b)
+        y_val_b = np.array(y_val_b)
+        return x_val_b, y_val_b
         
 if __name__ == "__main__":
     c = DataLoader(32,100)
