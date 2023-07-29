@@ -5,6 +5,7 @@ Load the data and preprocess it such that it is applicable for the machine learn
 
 import pandas as pd
 import numpy as np
+from keras.utils import to_categorical
 
 
 # ---- ADD DATA SPLIT (VALIDATION/TEST) -----
@@ -109,14 +110,52 @@ def normalize_data(x_train, x_test):
     normalized DataFrames or NumPy arrays
     """
 
-    variables_mean = x_train.mean(axis=1)
-    variables_std = np.std(x_train, axis=1)
-    normalized_x_train = (x_train - variables_mean[:, np.newaxis]) / variables_std[:, np.newaxis]
-    variables_mean = x_test.mean(axis=1)
-    variables_std = np.std(x_test, axis=1)
-    normalized_x_test = (x_test / variables_mean[:, np.newaxis]) / variables_std[:, np.newaxis]
+    normalized_x_train = x_train / 255
+    normalized_x_test = x_test / 255
     return normalized_x_train, normalized_x_test
 
+def reshape_data(x_train, x_test, l=28, w=28):
+    """
+
+    :param x_train: training data
+    :param x_test: test data
+    :param l: length of image (number of pixels)
+    :param w: width of image (number of pixels)
+    :return: reshaped data (can be flattened or made into a 2D image again)
+    """
+    num_train_samples = x_train.shape[0]
+    num_test_samples = x_test.shape[0]
+    reshaped_x_train = x_train.reshape((num_train_samples, l, w))
+    reshaped_x_test = x_test.reshape((num_test_samples, l, w))
+    reshaped_x_train = np.expand_dims(reshaped_x_train, axis=-1)
+    reshaped_x_test = np.expand_dims(reshaped_x_test, axis=-1)
+    return reshaped_x_train, reshaped_x_test
 
 
+def train_test_split(x, prop_train_size=0.8):
+    observations = x.shape[0]
+    sample_size = int(observations * prop_train_size)
+    x_train = x[:sample_size, :]
+    x_test = x[sample_size:, :]
+    return x_train, x_test
 
+    def one_hot_encoding(y):
+        """
+        Summary:
+        Y vector with dimensions N x 1 transformed into N x M_y
+        or Y.T 1 x N transformed into M_y x N
+        For each observation Yi, there are M_y possible values, thus N rows (observations) M_y columns (possible values)
+        if Yi equals 2, the 2nd column of the i'th row will equal 1, (100% probability the value is a 2)
+            If transformed, this will be the other way around, 2nd row of the i'th column will be equal to 1
+
+        Returns:
+        One hot encoded Y
+        Note: Do check if Y is transposed, and if the rows represent the number of observations
+        """
+
+        one_hot_y = \
+            to_categorical(
+                y,
+                num_classes=len(np.unique(y))
+            )
+        return one_hot_y
